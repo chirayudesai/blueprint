@@ -104,8 +104,12 @@ func (p *printer) printAssignment(assignment *Assignment) {
 }
 
 func (p *printer) printModule(module *Module) {
-	p.printToken(module.Type, module.TypePos)
+	p.printToken("{", module.TypePos)
+	p.printToken(strconv.Quote(module.Type), module.TypePos)
+	p.printToken(":", module.TypePos)
+	p.requestSpace()
 	p.printMap(&module.Map)
+	p.printToken("}", module.TypePos)
 	p.requestDoubleNewline()
 }
 
@@ -122,7 +126,7 @@ func (p *printer) printExpression(value Expression) {
 		} else {
 			s = "false"
 		}
-		p.printToken(s, v.LiteralPos)
+		p.printToken(strconv.Quote(s), v.LiteralPos)
 	case *Int64:
 		p.printToken(strconv.FormatInt(v.Value, 10), v.LiteralPos)
 	case *String:
@@ -142,9 +146,11 @@ func (p *printer) printList(list []Expression, pos, endPos scanner.Position) {
 	if len(list) > 1 || pos.Line != endPos.Line {
 		p.requestNewline()
 		p.indent(p.curIndent() + 4)
-		for _, value := range list {
+		for i, value := range list {
 			p.printExpression(value)
-			p.printToken(",", noPos)
+			if (i != len(list) - 1) {
+				p.printToken(",", noPos)
+			}
 			p.requestNewline()
 		}
 		p.unindent(endPos)
@@ -162,9 +168,11 @@ func (p *printer) printMap(m *Map) {
 	if len(m.Properties) > 0 || m.LBracePos.Line != m.RBracePos.Line {
 		p.requestNewline()
 		p.indent(p.curIndent() + 4)
-		for _, prop := range m.Properties {
+		for i, prop := range m.Properties {
 			p.printProperty(prop)
-			p.printToken(",", noPos)
+			if (i != len(m.Properties) - 1) {
+				p.printToken(",", noPos)
+			}
 			p.requestNewline()
 		}
 		p.unindent(m.RBracePos)
@@ -204,7 +212,7 @@ func (p *printer) printOperatorInternal(operator *Operator, allowIndent bool) {
 }
 
 func (p *printer) printProperty(property *Property) {
-	p.printToken(property.Name, property.NamePos)
+	p.printToken(strconv.Quote(property.Name), property.NamePos)
 	p.printToken(":", property.ColonPos)
 	p.requestSpace()
 	p.printExpression(property.Value)
@@ -220,11 +228,11 @@ func (p *printer) printToken(s string, pos scanner.Position) {
 	}
 
 	if newline {
-		p.printEndOfLineCommentsBefore(pos)
+		//p.printEndOfLineCommentsBefore(pos)
 		p.requestNewlinesForPos(pos)
 	}
 
-	p.printInLineCommentsBefore(pos)
+	//p.printInLineCommentsBefore(pos)
 
 	p.flushSpace()
 
@@ -296,7 +304,7 @@ func (p *printer) _requestNewline() {
 func (p *printer) requestNewline() {
 	pos := p.pos
 	pos.Line++
-	p.printEndOfLineCommentsBefore(pos)
+	//p.printEndOfLineCommentsBefore(pos)
 	p._requestNewline()
 }
 
@@ -348,7 +356,7 @@ func (p *printer) printComment(cg *CommentGroup) {
 
 // Print any comments that occur after the last token, and a trailing newline
 func (p *printer) flush() {
-	for _, c := range p.skippedComments {
+	/*for _, c := range p.skippedComments {
 		if !p.requestNewlinesForPos(c.Pos()) {
 			p.requestSpace()
 		}
@@ -357,7 +365,7 @@ func (p *printer) flush() {
 	for p.curComment < len(p.comments) {
 		p.printComment(p.comments[p.curComment])
 		p.curComment++
-	}
+	}*/
 	p.output = append(p.output, '\n')
 }
 
@@ -377,7 +385,7 @@ func (p *printer) indent(i int) {
 }
 
 func (p *printer) unindent(pos scanner.Position) {
-	p.printEndOfLineCommentsBefore(pos)
+	//p.printEndOfLineCommentsBefore(pos)
 	p.indentList = p.indentList[0 : len(p.indentList)-1]
 }
 
