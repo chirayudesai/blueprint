@@ -61,10 +61,12 @@ func newPrinter(file *File) *printer {
 func Print(file *File) ([]byte, error) {
 	p := newPrinter(file)
 
+	p.printToken("[", p.pos)
 	for _, def := range p.defs {
 		p.printDef(def)
 	}
 	p.flush()
+	p.printToken("]", p.pos)
 	return p.output, nil
 }
 
