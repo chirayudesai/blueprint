@@ -110,6 +110,7 @@ func (p *printer) printModule(module *Module) {
 	p.requestSpace()
 	p.printMap(&module.Map)
 	p.printToken("}", module.TypePos)
+	p.printToken(",", module.TypePos)
 	p.requestDoubleNewline()
 }
 
